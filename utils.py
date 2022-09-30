@@ -21,7 +21,7 @@ def load_dicts():
             json.dump(char2idx, fp)
         with open('data/idx2char_latarm.json', mode='w', encoding='utf-8') as fp:
             json.dump(idx2char, fp)
-        print('files not existing. created new files.')
+        print('\nfiles not existing. created new files.\nWarning: an older trained model might not work with new character indexing')
     
     with open('data/char2idx_latarm.json', mode='r', encoding='utf-8') as file:
         char2idx = json.load(file)
