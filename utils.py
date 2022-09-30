@@ -35,3 +35,10 @@ def encode_char(seq, vocab):
     vocab_set = set(list(vocab.keys())[1:])
     encoded_seq = np.array([int(vocab[l]) if l in vocab_set else vocab['oov'] for l in seq])
     return encoded_seq
+
+def count_samples(filepath):
+    nl = 0
+    with open(filepath, mode='r', encoding='utf8') as file:
+        for line in file:
+            nl += 1
+    return nl
