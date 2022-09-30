@@ -1,5 +1,6 @@
 import json
 import os
+import numpy as np
 
 
 def load_dicts():
@@ -28,3 +29,9 @@ def load_dicts():
     with open('data/idx2char_latarm.json', mode='r', encoding='utf-8') as file:
         idx2char = json.load(file)
     return char2idx, idx2char
+
+
+def encode_char(seq, vocab):
+    vocab_set = set(list(vocab.keys())[1:])
+    encoded_seq = np.array([int(vocab[l]) if l in vocab_set else vocab['oov'] for l in seq])
+    return encoded_seq
