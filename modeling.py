@@ -3,6 +3,10 @@ import numpy as np
 from tensorflow.keras import losses, optimizers, callbacks, metrics
 from tensorflow import GradientTape
 from tensorflow import range as tfrange
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from tensorflow.math import argmax
 
 class ModelConfigurator():
     def __init__(self, MAX_LEN, NUM_HEAD, FF_DIM, NUM_LAYERS, EMBED_DIM, LR):
@@ -118,11 +122,6 @@ class MaskedLanguageModel(Model):
     
     @property
     def metrics(self):
-        # We list our `Metric` objects here so that `reset_states()` can be
-        # called automatically at the start of each epoch
-        # or at the start of `evaluate()`.
-        # If you don't implement this property, you have to call
-        # `reset_states()` yourself at the time of your choosing.
         return [loss_tracker, accuracy]
 
 
@@ -147,10 +146,26 @@ def create_mlm(mc, vocab_size):
     mlm_dense = layers.Dense(vocab_size, name="mlm_cls", activation="softmax")(
         encoder_output
     )
-    #mlm_output = layers.Dropout(0.1)(mlm_dense)
+
     mlm_model = MaskedLanguageModel(inputs, mlm_dense, name="masked_bert_model")
 
     optimizer = optimizers.Adam(learning_rate=mc.LR)
     optimizer = mixed_precision.LossScaleOptimizer(optimizer)
     mlm_model.compile(optimizer=optimizer, metrics=[accuracy])
     return mlm_model
+
+
+def plot_history(hist):
+    hist_df = pd.DataFrame(
+        {'loss': hist.history['loss'],
+        'accuracy': hist.history['accuracy'],
+        'val_loss': hist.history['val_loss'],
+        'val_accuracy': hist.history['val_accuracy']
+        }
+        )
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 7), sharey=False)
+    hist_df[['loss', 'val_loss']].plot(ax=ax1)
+    hist_df[['accuracy', 'val_accuracy']].plot(ax=ax2)
+    ax1.set_title('Loss')
+    ax2.set_title('Accuracy')
+    plt.show()
