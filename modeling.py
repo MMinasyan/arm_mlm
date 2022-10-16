@@ -1,15 +1,17 @@
-from tensorflow.keras import layers, Sequential, Model
+from tensorflow.keras import layers, Sequential, Model, mixed_precision
 import numpy as np
 from tensorflow.keras import losses, optimizers, callbacks, metrics
 from tensorflow import GradientTape
+from tensorflow import range as tfrange
 
 class ModelConfigurator():
-    def __init__(self, MAX_LEN, NUM_HEAD, FF_DIM, NUM_LAYERS, EMBED_DIM):
+    def __init__(self, MAX_LEN, NUM_HEAD, FF_DIM, NUM_LAYERS, EMBED_DIM, LR):
         self.MAX_LEN = MAX_LEN
         self.NUM_HEAD = NUM_HEAD
         self.FF_DIM = FF_DIM
         self.NUM_LAYERS = NUM_LAYERS
         self.EMBED_DIM = EMBED_DIM
+        self.LR = LR
 
 
 def att_module(mc, query, key, value, i):
@@ -122,3 +124,33 @@ class MaskedLanguageModel(Model):
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
         return [loss_tracker, accuracy]
+
+
+def create_mlm(mc, vocab_size):
+    inputs = layers.Input((mc.MAX_LEN,), dtype='int32')
+
+    word_embeddings = layers.Embedding(
+        vocab_size, mc.EMBED_DIM, name="word_embedding"
+    )(inputs)
+    position_embeddings = layers.Embedding(
+        input_dim=mc.MAX_LEN,
+        output_dim=mc.EMBED_DIM,
+        weights=[get_pos_encoding_matrix(mc)],
+        name="position_embedding",
+    )(tfrange(start=0, limit=mc.MAX_LEN, delta=1))
+    embeddings = word_embeddings + position_embeddings
+
+    encoder_output = embeddings
+    for i in range(mc.NUM_LAYERS):
+        encoder_output = att_module(mc, encoder_output, encoder_output, encoder_output, i)
+
+    mlm_dense = layers.Dense(vocab_size, name="mlm_cls", activation="softmax")(
+        encoder_output
+    )
+    #mlm_output = layers.Dropout(0.1)(mlm_dense)
+    mlm_model = MaskedLanguageModel(inputs, mlm_dense, name="masked_bert_model")
+
+    optimizer = optimizers.Adam(learning_rate=mc.LR)
+    optimizer = mixed_precision.LossScaleOptimizer(optimizer)
+    mlm_model.compile(optimizer=optimizer, metrics=[accuracy])
+    return mlm_model
