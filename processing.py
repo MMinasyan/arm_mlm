@@ -1,6 +1,7 @@
 import json
 import os
 import numpy as np
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 
 def load_dicts():
@@ -42,3 +43,41 @@ def count_samples(filepath):
         for line in file:
             nl += 1
     return nl
+
+def data_generator(filepath='data/all_paragraphs.txt', max_len=512, masking=True, batch_size=64, vocab=None, mask_id=None):
+    char_set = set(vocab.keys())
+    if not mask_id:
+        mask_id = len(vocab)
+    while True:
+        try:
+            with open(filepath, encoding='utf8', mode='r') as file:
+                data_batch = []
+                for line in file:
+                    if len(data_batch) == batch_size:
+                        y_labels = []
+                        weights_par = []
+                        masked_par = []
+                        for p in data_batch:
+                            char_seq = np.array(list(p))
+                            len_par = len(char_seq)
+                            y_label = np.array([vocab[c] if c in char_set else 1 for c in char_seq])
+                            y_labels.append(y_label)
+                            randidx = np.random.rand(len_par) <= 0.15
+                            randidx[y_label==1] = False
+                            weights_seq = np.zeros((len_par, ))
+                            weights_seq[randidx] = 1
+                            weights_seq = weights_seq.astype('int16')
+                            #weights_seq[token_seq=='oov'] = 0
+                            masked_seq = encode_char(p, vocab)
+                            masked_seq[randidx] = mask_id
+                            weights_par.append(weights_seq)
+                            masked_par.append(masked_seq)
+                        y_labels = pad_sequences(y_labels, maxlen=max_len, padding='post')
+                        weights_par = pad_sequences(weights_par, maxlen=max_len, padding='post')
+                        masked_par = pad_sequences(masked_par, maxlen=max_len, padding='post')
+                        yield masked_par, y_labels, weights_par
+                        data_batch = []
+                    else:
+                        data_batch.append(line)
+        except StopIteration:
+            pass
