@@ -1,4 +1,5 @@
 from tensorflow.keras import layers, Sequential, Model
+import numpy as np
 
 class ModelConfigurator():
     def __init__(self, MAX_LEN, NUM_HEAD, FF_DIM, NUM_LAYERS, EMBED_DIM):
@@ -39,3 +40,17 @@ def att_module(mc, query, key, value, i):
         epsilon=1e-6, name="encoder_{}/ffn_layernormalization".format(i)
     )(attention_output + ffn_output)
     return sequence_output
+
+
+def get_pos_encoding_matrix(mc):
+    pos_enc = np.array(
+        [
+            [pos / np.power(10000, 2 * (j // 2) / mc.EMBED_DIM) for j in range(mc.EMBED_DIM)]
+            if pos != 0
+            else np.zeros(mc.EMBED_DIM)
+            for pos in range(mc.MAX_LEN)
+        ]
+    )
+    pos_enc[1:, 0::2] = np.sin(pos_enc[1:, 0::2])  # dim 2i
+    pos_enc[1:, 1::2] = np.cos(pos_enc[1:, 1::2])  # dim 2i+1
+    return pos_enc
