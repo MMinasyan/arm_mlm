@@ -44,7 +44,7 @@ def count_samples(filepath):
             nl += 1
     return nl
 
-def data_generator(filepath='data/all_paragraphs.txt', max_len=512, masking=True, batch_size=64, vocab=None, mask_id=None):
+def data_generator(filepath, max_len=512, masking=True, batch_size=64, vocab=None, mask_id=None):
     char_set = set(vocab.keys())
     if not mask_id:
         mask_id = len(vocab)
