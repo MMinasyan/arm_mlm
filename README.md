@@ -18,9 +18,9 @@ The model uses characters as input including Armenian and Latin letters, digits 
 
 The main body has the same architecture with self-attention models as BERT, with hyperparameters:
 
-character embedding = hidden dimension = 256
-number of attention heads = 8
-number of attention layers = 8
+character embedding = hidden dimension = 256<br />
+number of attention heads = 8<br />
+number of attention layers = 8<br />
 feedforward dimension = 1024
 
 
@@ -28,9 +28,9 @@ Number of trainable parameters in the model is 6,413,000
 
 ## Data
 
-Paragraphs from 22 different media sources with maximum lenght of 512 characters.
-training samples: 1,159,000
-validation samples: 145,000
+Paragraphs from 22 different media sources with maximum lenght of 512 characters.<br />
+training samples: 1,159,000<br />
+validation samples: 145,000<br />
 testing semples: 145,000
 
 ## Pretraining
@@ -43,7 +43,7 @@ Learning rate is bigger in the first epoch and dectreases during training proces
 
 ## Results
 
-Results show ~ 94.6 % accuracy rate over test samples.
+Results show ~ 94.6 % accuracy rate over test samples.<br />
 However, the model performance should be tested after finetuning for specific tasks
 
 The work on this direction is in progress at the moment, and hopefully would be presented soon.
